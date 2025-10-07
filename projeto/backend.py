@@ -4,10 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# ==== CONFIGURAÇÃO DO CORS ====
+# ==== CONFIGURAÇÃO DO CORS (libera acesso do frontend) ====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # libera todos os domínios (pode restringir depois)
+    allow_origins=["*"],  # pode restringir depois
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,8 +33,7 @@ def calcular_total(km, combustivel, tipo, passageiros=None, opcao="p"):
         else:
             mediaenergia = km * 0.5
         return mediaenergia
-    else:
-        return emissao_combustivel(combustivel) + emissao_viagem_veiculo(km, tipo)
+    return emissao_combustivel(combustivel) + emissao_viagem_veiculo(km, tipo)
 
 # ==== MODELO DE DADOS ====
 class Viagem(BaseModel):
@@ -44,7 +43,7 @@ class Viagem(BaseModel):
     passageiros: int | None = None
     opcao: str = "p"
 
-# ==== ENDPOINT API ====
+# ==== ENDPOINT (rota) ====
 @app.post("/calcular")
 def calcular(viagem: Viagem):
     total = calcular_total(
