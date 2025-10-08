@@ -1,13 +1,13 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# ==== CONFIGURAÇÃO DO CORS (libera acesso do frontend) ====
+# ==== CONFIGURAÇÃO DO CORS ====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # pode restringir depois
+    allow_origins=["*"],  # permite acesso de qualquer origem
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,7 +43,7 @@ class Viagem(BaseModel):
     passageiros: int | None = None
     opcao: str = "p"
 
-# ==== ENDPOINT (rota) ====
+# ==== ENDPOINT API ====
 @app.post("/calcular")
 def calcular(viagem: Viagem):
     total = calcular_total(

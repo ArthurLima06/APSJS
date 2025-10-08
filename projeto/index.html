@@ -1,85 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Calculadora de Carbono</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            width: 350px;
-        }
-        input, select, button {
-            width: 100%;
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 1rem;
-        }
-        button {
-            background: #2d89ef;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #1c65b8;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        #resultado {
-            text-align: center;
-            margin-top: 15px;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Calculadora de Carbono</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: center;
+    }
+    input, select, button {
+      margin: 10px 0;
+      width: 90%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #resultado {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Calculadora de Carbono</h1>
-        <input type="number" id="km" placeholder="Distância (km)">
-        <input type="number" id="combustivel" placeholder="Litros de combustível">
-        <select id="tipo">
-            <option value="carro">Carro</option>
-            <option value="moto">Moto</option>
-            <option value="avião">Avião</option>
-            <option value="barco">Barco</option>
-        </select>
-        <button onclick="calcular()">Calcular</button>
-        <div id="resultado"></div>
-    </div>
+  <div class="container">
+    <h2>🌱 Calculadora de Carbono</h2>
 
-    <script>
-        async function calcular() {
-            const km = parseFloat(document.getElementById("km").value);
-            const combustivel = parseFloat(document.getElementById("combustivel").value);
-            const tipo = document.getElementById("tipo").value;
+    <input type="number" id="km" placeholder="Distância percorrida (km)">
+    <input type="number" id="combustivel" placeholder="Combustível (litros)">
+    
+    <select id="tipo">
+      <option value="carro">Carro</option>
+      <option value="moto">Moto</option>
+      <option value="avião">Avião</option>
+      <option value="barco">Barco</option>
+    </select>
 
-            const dados = { km, combustivel, tipo };
+    <button onclick="calcular()">Calcular</button>
 
-            const resposta = await fetch("http://127.0.0.1:8000/calcular", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            });
+    <p id="resultado"></p>
+  </div>
 
-            const json = await resposta.json();
-            document.getElementById("resultado").innerText =
-                `Emissão total: ${json.emissao_total.toFixed(2)} kg CO₂`;
-        }
-    </script>
+  <script>
+    async function calcular() {
+      const km = parseFloat(document.getElementById("km").value);
+      const combustivel = parseFloat(document.getElementById("combustivel").value);
+      const tipo = document.getElementById("tipo").value;
+
+      if (isNaN(km) || isNaN(combustivel)) {
+        document.getElementById("resultado").innerText = "Preencha todos os campos.";
+        return;
+      }
+
+      const dados = { km, combustivel, tipo };
+
+      try {
+        const resp = await fetch("http://127.0.0.1:8000/calcular", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dados)
+        });
+
+        const json = await resp.json();
+        document.getElementById("resultado").innerText =
+          `Emissão total: ${json.emissao_total.toFixed(2)} kg CO₂`;
+      } catch (error) {
+        document.getElementById("resultado").innerText = "Erro ao conectar com o servidor.";
+      }
+    }
+  </script>
 </body>
 </html>
