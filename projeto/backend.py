@@ -4,53 +4,49 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# ==== CONFIGURAÇÃO DO CORS ====
+# ======= CONFIGURAÇÃO DO CORS =======
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # permite acesso de qualquer origem
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ==== FUNÇÕES ORIGINAIS DE CÁLCULO ====
-def emissao_combustivel(litros: float):
-    return litros * 2.31  # kg CO2 / litro gasolina
-
-def emissao_viagem_veiculo(km: float, tipo: str):
-    fatores = {
-        "carro": 0.15,
-        "moto": 0.10,
-        "avião": 0.25,
-        "barco": 0.20
-    }
-    return km * fatores.get(tipo, 0)
-
-def calcular_total(km, combustivel, tipo, passageiros=None, opcao="p"):
-    if opcao == "pers":
-        if tipo == "carro":
-            mediaenergia = km * 0.67
-        else:
-            mediaenergia = km * 0.5
-        return mediaenergia
-    return emissao_combustivel(combustivel) + emissao_viagem_veiculo(km, tipo)
-
-# ==== MODELO DE DADOS ====
+# ======= MODELO DE DADOS =======
 class Viagem(BaseModel):
     km: float
-    combustivel: float
-    tipo: str
+    tipo: str  # 'todos' ou veículo específico
     passageiros: int | None = None
-    opcao: str = "p"
 
-# ==== ENDPOINT API ====
+
+# ======= FUNÇÕES DE CÁLCULO =======
+def calcular_media_geral(km):
+    # média de todos os veículos
+    fatores = {"carro": 0.15, "moto": 0.10, "avião": 0.25, "barco": 0.20}
+    total = sum(km * v for v in fatores.values())
+    media = total / len(fatores)
+    return media
+
+
+def calcular_por_veiculo(km, tipo, passageiros=None):
+    fatores = {"carro": 0.15, "moto": 0.10, "avião": 0.25, "barco": 0.20}
+    fator = fatores.get(tipo, 0)
+    emissao_total = km * fator
+
+    if tipo == "avião" and passageiros and passageiros > 0:
+        emissao_total /= passageiros  # divide entre os passageiros
+
+    return emissao_total
+
+
+# ======= ENDPOINT API =======
 @app.post("/calcular")
 def calcular(viagem: Viagem):
-    total = calcular_total(
-        viagem.km,
-        viagem.combustivel,
-        viagem.tipo,
-        viagem.passageiros,
-        viagem.opcao
-    )
-    return {"emissao_total": total}
+    if viagem.tipo == "todos":
+        total = calcular_media_geral(viagem.km)
+        return {"tipo": "média geral", "emissao_total": total}
+
+    else:
+        total = calcular_por_veiculo(viagem.km, viagem.tipo, viagem.passageiros)
+        return {"tipo": viagem.tipo, "emissao_total": total}

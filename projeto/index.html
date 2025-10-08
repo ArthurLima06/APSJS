@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Calculadora de Carbono</title>
+  <title>Calculadora de Carbono - Média por Veículo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,7 +18,7 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 400px;
+      width: 420px;
       text-align: center;
     }
     input, select, button {
@@ -43,21 +43,29 @@
       font-weight: bold;
       color: #333;
     }
+    #passageirosDiv {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>🌱 Calculadora de Carbono</h2>
+    <p>Escolha um tipo de veículo ou "Todos" para média geral:</p>
 
     <input type="number" id="km" placeholder="Distância percorrida (km)">
-    <input type="number" id="combustivel" placeholder="Combustível (litros)">
     
-    <select id="tipo">
+    <select id="tipo" onchange="mostrarPassageiros()">
+      <option value="todos">Todos os veículos</option>
       <option value="carro">Carro</option>
       <option value="moto">Moto</option>
       <option value="avião">Avião</option>
       <option value="barco">Barco</option>
     </select>
+
+    <div id="passageirosDiv">
+      <input type="number" id="passageiros" placeholder="Número de passageiros">
+    </div>
 
     <button onclick="calcular()">Calcular</button>
 
@@ -65,17 +73,26 @@
   </div>
 
   <script>
+    function mostrarPassageiros() {
+      const tipo = document.getElementById("tipo").value;
+      const passageirosDiv = document.getElementById("passageirosDiv");
+      passageirosDiv.style.display = (tipo === "avião") ? "block" : "none";
+    }
+
     async function calcular() {
       const km = parseFloat(document.getElementById("km").value);
-      const combustivel = parseFloat(document.getElementById("combustivel").value);
       const tipo = document.getElementById("tipo").value;
+      const passageiros = parseInt(document.getElementById("passageiros").value);
 
-      if (isNaN(km) || isNaN(combustivel)) {
-        document.getElementById("resultado").innerText = "Preencha todos os campos.";
+      if (isNaN(km) || km <= 0) {
+        document.getElementById("resultado").innerText = "Informe uma distância válida.";
         return;
       }
 
-      const dados = { km, combustivel, tipo };
+      const dados = { km, tipo };
+      if (tipo === "avião" && !isNaN(passageiros) && passageiros > 0) {
+        dados.passageiros = passageiros;
+      }
 
       try {
         const resp = await fetch("http://127.0.0.1:8000/calcular", {
@@ -86,7 +103,7 @@
 
         const json = await resp.json();
         document.getElementById("resultado").innerText =
-          `Emissão total: ${json.emissao_total.toFixed(2)} kg CO₂`;
+          `Tipo: ${json.tipo.toUpperCase()} → Emissão total: ${json.emissao_total.toFixed(2)} kg CO₂`;
       } catch (error) {
         document.getElementById("resultado").innerText = "Erro ao conectar com o servidor.";
       }
